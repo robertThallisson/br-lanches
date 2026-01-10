@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cardápio Digital</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+    import {
+      getFirestore,
+      collection,
+      getDocs
+    } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBItd2aXWE8KXsEjhEFiWNqyBNzpYexuo0",
+      authDomain: "nr-lanches.firebaseapp.com",
+      projectId: "nr-lanches",
+      storageBucket: "nr-lanches.firebasestorage.app",
+      messagingSenderId: "896725687818",
+      appId: "1:896725687818:web:73d35b2853579bd04309f3"
+    };
+
+    initializeApp(firebaseConfig);
+    const db = getFirestore();
+
+    const carrinho = {};
+    let valorFrete = 0;
+    let isDelivery = false;
+
+    // ================= FRETE =================
+    async function carregarFrete() {
+      const snap = await getDocs(collection(db, 'configuracao'));
+
+      if (snap.empty) {
+        valorFrete = 0;
+      } else {
+        snap.forEach(d => {
+          valorFrete = d.data().frete || 0;
+        });
+      }
+
+      document.getElementById('frete').innerText = valorFrete.toFixed(2);
+    }
+
+    // ================= CARRINHO =================
+    function keyItem(item, combo) {
+      return item.nome + (combo ? '::combo' : '::normal');
+    }
+
+    function addItem(item, combo=false) {
+      const key = keyItem(item, combo);
+      if (!carrinho[key]) {
+        carrinho[key] = {
+          nome: item.nome,
+          combo,
+          valor: combo ? item.valor_combo : item.valor,
+          qtd: 0
+        };
+      }
+      carrinho[key].qtd++;
+      atualizarTopo();
+    }
+
+    function atualizarTopo() {
+      const totalQtd = Object.values(carrinho)
+        .reduce((s,i)=>s+i.qtd,0);
+
+      document.getElementById('cart-count').innerText = totalQtd;
+      document.getElementById('btnFinalizar').style.display =
+        totalQtd ? 'block' : 'none';
+    }
+
+    // ================= CARDÁPIO =================
+    async function carregar() {
+      const lista = document.getElementById('lista');
+      const snap = await getDocs(collection(db, 'lanches'));
+      const itens = [];
+
+      snap.forEach(d => itens.push(d.data()));
+      itens.sort((a,b)=>a.tipo-b.tipo);
+
+      lista.innerHTML = itens.map(i=>`
+        <div class="item">
+          <div class="img">${i.tipo===0?'🍔':i.tipo===1?'🥤':'🍰'}</div>
+          <div class="info">
+            <strong class="nome">${i.nome}</strong>
+
+            ${i.descricao ? `<div class="descricao">${i.descricao}</div>`:''}
+
+            <div class="preco-linha">
+              <span>R$ ${i.valor.toFixed(2)}</span>
+              <button class="btn-normal"
+                onclick='addItem(${JSON.stringify(i)})'>
+                Normal
+              </button>
+            </div>
+
+            ${i.valor_combo ? `
+              ${i.descricao_combo
+                ? `<div class="descricao-combo">${i.descricao_combo}</div>`
+                : ''}
+              <div class="preco-linha combo">
+                <span>R$ ${i.valor_combo.toFixed(2)}</span>
+                <button class="btn-combo"
+                  onclick='addItem(${JSON.stringify(i)},true)'>
+                  Combo
+                </button>
+              </div>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ================= CARRINHO =================
+    function irCarrinho() {
+      document.getElementById('tela-cardapio').style.display='none';
+      document.getElementById('tela-carrinho').style.display='block';
+      renderCarrinho();
+    }
+
+    function renderCarrinho() {
+      const lista = document.getElementById('lista-carrinho');
+      let total = isDelivery ? valorFrete : 0;
+
+      lista.innerHTML = Object.entries(carrinho).map(([k,i])=>{
+        const sub = i.qtd * i.valor;
+        total += sub;
+        return `
+          <div class="linha-carrinho">
+            <div><strong>${i.qtd}x ${i.nome}${i.combo?' (Combo)':''}</strong></div>
+            <div class="acoes">
+              <button onclick="alterarQtd('${k}',-1)">➖</button>
+              <button onclick="alterarQtd('${k}',1)">➕</button>
+            </div>
+            <div>R$ ${sub.toFixed(2)}</div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('total').innerText = total.toFixed(2);
+    }
+
+    function alterarQtd(key, delta) {
+      carrinho[key].qtd += delta;
+      if (carrinho[key].qtd <= 0) delete carrinho[key];
+      atualizarTopo();
+      renderCarrinho();
+    }
+
+    // ================= RETIRADA =================
+    function atualizarRetirada() {
+      const retirada =
+        document.querySelector('input[name=retirada]:checked').value;
+
+      isDelivery = retirada === 'Delivery';
+
+      document.getElementById('linha-frete').style.display =
+        isDelivery ? 'block' : 'none';
+
+      renderCarrinho();
+    }
+
+    // ================= FINALIZAR =================
+    function finalizarPedido() {
+      const retirada =
+        document.querySelector('input[name=retirada]:checked').value;
+      const pagamento =
+        document.querySelector('input[name=pagamento]:checked').value;
+      const troco = document.getElementById('troco').value;
+
+	  const linha = '\n-----------------------'
+      let msg = 'Pedido:%0A';
+      Object.values(carrinho).forEach(i=>{
+        msg += `${i.qtd}x ${i.nome}${i.combo?' (Combo)':''}%0A` ;
+		msg += linha;
+      });
+
+      if (isDelivery) {
+        msg += `%0AFrete: R$ ${valorFrete.toFixed(2)}`;
+      }
+
+      msg += `%0ATotal: R$ ${document.getElementById('total').innerText}`;
+      
+	  msg += `%0ARetirada: ${retirada}%0APagamento: ${pagamento}`;
+
+      if (pagamento === 'Dinheiro')
+        msg += `%0ATroco para: ${troco}`;
+
+      window.open(
+        `https://wa.me/5562982366131?text=${msg}`,
+        '_blank'
+      );
+    }
+
+    // ================= EXPORT =================
+    window.addItem = addItem;
+    window.irCarrinho = irCarrinho;
+    window.alterarQtd = alterarQtd;
+    window.finalizarPedido = finalizarPedido;
+    window.atualizarRetirada = atualizarRetirada;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await carregarFrete();
+      await carregar();
+      atualizarRetirada();
+    });
+  </script>
+
+  <style>
+    body{
+      font-family:Arial, Helvetica, sans-serif;
+      background:#0b0205;
+      color:#fff;
+      margin:0;
+      padding-bottom:90px
+    }
+    .topo{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      padding:14px;
+      background:#4b1626;
+      border-bottom:2px solid #7a2a40;
+    }
+    .logo{
+      width:48px;
+      height:48px;
+      border-radius:50%;
+      background:#fff;
+      object-fit:cover;
+    }
+    .titulo h2{margin:0;font-size:18px}
+    .titulo small{color:#ffb6c1}
+    .cart{font-size:18px}
+    .item{
+      display:flex;
+      background:#2b0f18;
+      margin:12px;
+      border-radius:14px;
+      overflow:hidden;
+      box-shadow:0 4px 12px rgba(0,0,0,.4)
+    }
+    .img{
+      width:90px;
+      font-size:48px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:#4b1626
+    }
+    .info{flex:1;padding:12px}
+    .nome{font-size:18px}
+    .descricao{font-size:13px;color:#ccc;margin-bottom:8px}
+    .descricao-combo{font-size:13px;color:#ffb74d;margin-bottom:4px}
+    .preco-linha{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:6px
+    }
+    .combo{color:#ff9800}
+    button{
+      border:none;
+      border-radius:20px;
+      padding:6px 14px;
+      font-size:14px;
+      cursor:pointer
+    }
+    .btn-normal{
+      background:#ffdde5;
+      color:#4b1626;
+      font-weight:bold
+    }
+    .btn-combo{
+      background:#ff9800;
+      color:#000;
+      font-weight:bold
+    }
+    #btnFinalizar{
+      display:none;
+      position:fixed;
+      bottom:0;
+      left:0;
+      width:100%;
+      padding:18px;
+      font-size:20px;
+      background:#7a2a40;
+      color:#fff;
+      border:none
+    }
+	
+	#btnFinalizarWhatsApp{
+      display:black;
+      position:fixed;
+      bottom:0;
+      left:0;
+      width:100%;
+      padding:18px;
+      font-size:20px;
+      background:#7a2a40;
+      color:#fff;
+      border:none
+    }
+    #tela-carrinho{display:none;padding:15px}
+    .linha-carrinho{
+      display:grid;
+      grid-template-columns: 1fr auto auto;
+      align-items:center;
+      gap:10px;
+      margin-bottom:10px
+    }
+    .acoes{
+      display:flex;
+      align-items:center;
+    }
+    .acoes button{
+      margin:0 4px;
+      width:32px;
+      height:32px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius:50%;
+    }
+  </style>
+</head>
+
+<body>
+
+<div id="tela-cardapio">
+  <header class="topo">
+    <img src="logo.png" class="logo" />
+    <div class="titulo">
+      <h2>NR Lanchonete</h2>
+      <small>Seu lanche favorito 🍔</small>
+    </div>
+    <div class="cart">🛒 <span id="cart-count">0</span></div>
+  </header>
+  <div id="lista">
+  
+  
+  
+  </div>
+  <button id="btnFinalizar" onclick="irCarrinho()">Finalizar Pedido</button>
+  
+</div>
+
+<div id="tela-carrinho">
+  <h2>🛒 Seu Pedido</h2>
+
+  <div id="lista-carrinho"></div>
+
+  <h3 id="linha-frete" style="display:none">
+    Frete: R$ <span id="frete">0.00</span>
+  </h3>
+
+  <h3>Total: R$ <span id="total">0.00</span></h3>
+
+  <h3>Retirada</h3>
+  <label>
+    <input type="radio" name="retirada" value="Balcão"
+           checked onchange="atualizarRetirada()">
+    Balcão
+  </label><br>
+
+  <label>
+    <input type="radio" name="retirada" value="Delivery"
+           onchange="atualizarRetirada()">
+    Delivery
+  </label>
+
+  <h3>Pagamento</h3>
+  <label><input type="radio" name="pagamento" value="Pix" checked> Pix</label><br>
+  <label><input type="radio" name="pagamento" value="Cartão"> Cartão</label><br>
+  <label><input type="radio" name="pagamento" value="Dinheiro"> Dinheiro</label><br>
+  <input id="troco" placeholder="Troco para..." />
+
+  <br><br>
+  
+  <button id="btnFinalizarWhatsApp" onclick="finalizarPedido()">Finalizar</button>
+</div>
+
+
+
+</body>
+</html>
