@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin • Cardápio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';
+    import {
+      getFirestore, collection, getDocs,
+      addDoc, updateDoc, deleteDoc, doc
+    } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+
+    // 🔥 Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyBItd2aXWE8KXsEjhEFiWNqyBNzpYexuo0",
+      authDomain: "nr-lanches.firebaseapp.com",
+      projectId: "nr-lanches",
+      storageBucket: "nr-lanches.firebasestorage.app",
+      messagingSenderId: "896725687818",
+      appId: "1:896725687818:web:73d35b2853579bd04309f3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const lanchesRef = collection(db, 'lanches');
+    const configRef = collection(db, 'configuracao');
+
+    // 🔐 Login
+    const email = prompt('Email do admin:', 'admin@nr-lanches.com');
+    const senha = prompt('Senha:', 'fortinite');
+
+    try {
+      await signInWithEmailAndPassword(auth, email, senha);
+    } catch {
+      alert('Acesso negado');
+      document.body.innerHTML = '';
+      throw new Error('Login inválido');
+    }
+
+    onAuthStateChanged(auth, user => {
+      if (user) init();
+    });
+
+    // 💰 Máscara
+    window.maskMoney = input => {
+      let v = input.value.replace(/\D/g, '');
+      v = (parseInt(v || '0') / 100).toFixed(2);
+      v = v.replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      input.value = 'R$ ' + v;
+    };
+
+    function moneyToNumber(v) {
+      return parseFloat(
+        v.replace('R$', '').replace(/\./g, '').replace(',', '.')
+      ) || 0;
+    }
+
+    // ================= INIT =================
+    async function init() {
+      const tbody = document.getElementById('tbody');
+      const modal = document.getElementById('modal');
+      const form = document.getElementById('form');
+      const msg = document.getElementById('msg');
+
+      const freteInput = document.getElementById('frete');
+      const btnFrete = document.getElementById('atualizarFrete');
+
+      let editId = null;
+      let configId = null; // 🔑 ID do único registro
+
+      // ======= LANCHES =======
+      async function carregarLanches() {
+        tbody.innerHTML = '';
+        const snap = await getDocs(lanchesRef);
+
+        snap.forEach(d => {
+          const i = d.data();
+          tbody.innerHTML += `
+            <tr>
+              <td>${i.nome}</td>
+              <td>${i.tipo}</td>
+              <td>R$ ${i.valor.toFixed(2)}</td>
+              <td>${i.valor_combo ? 'R$ ' + i.valor_combo.toFixed(2) : '-'}</td>
+              <td>
+                <button onclick="editar('${d.id}', ${JSON.stringify(i).replace(/"/g,'&quot;')})">✏️</button>
+                <button onclick="excluir('${d.id}')">🗑️</button>
+              </td>
+            </tr>
+          `;
+        });
+      }
+
+      // ======= CONFIGURAÇÃO (SINGLE RECORD) =======
+      async function carregarFrete() {
+        const snap = await getDocs(configRef);
+
+        if (snap.empty) {
+          freteInput.value = 'R$ 0,00';
+          configId = null;
+          return;
+        }
+
+        snap.forEach(d => {
+          configId = d.id;
+          freteInput.value =
+            'R$ ' + d.data().frete.toFixed(2).replace('.', ',');
+        });
+      }
+
+      btnFrete.onclick = async () => {
+        try {
+          const frete = moneyToNumber(freteInput.value);
+
+          if (configId) {
+            await updateDoc(doc(db, 'configuracao', configId), { frete });
+          } else {
+            const docRef = await addDoc(configRef, { frete });
+            configId = docRef.id;
+          }
+
+          alert('✅ Frete atualizado');
+        } catch {
+          alert('❌ Erro ao salvar frete');
+        }
+      };
+
+      // ===== CRUD LANCHE =====
+      window.editar = (id, item) => {
+        editId = id;
+        modal.style.display = 'flex';
+
+        Object.keys(item).forEach(k => {
+          if (!form[k]) return;
+
+          form[k].value =
+            typeof item[k] === 'number'
+              ? 'R$ ' + item[k].toFixed(2).replace('.', ',')
+              : item[k];
+        });
+      };
+
+      window.excluir = async id => {
+        if (confirm('Excluir item?')) {
+          await deleteDoc(doc(db, 'lanches', id));
+          carregarLanches();
+        }
+      };
+
+      document.getElementById('novo').onclick = () => {
+        editId = null;
+        form.reset();
+        modal.style.display = 'flex';
+      };
+
+      form.onsubmit = async e => {
+        e.preventDefault();
+        msg.textContent = 'Salvando...';
+
+        try {
+          const data = Object.fromEntries(new FormData(form));
+          data.tipo = Number(data.tipo);
+          data.valor = moneyToNumber(data.valor);
+          data.valor_combo = data.valor_combo
+            ? moneyToNumber(data.valor_combo)
+            : null;
+
+          if (editId) {
+            await updateDoc(doc(db, 'lanches', editId), data);
+          } else {
+            await addDoc(lanchesRef, data);
+          }
+
+          msg.textContent = '✅ Sucesso';
+          setTimeout(() => {
+            modal.style.display = 'none';
+            msg.textContent = '';
+            carregarLanches();
+          }, 1200);
+        } catch {
+          msg.textContent = '❌ Erro ao salvar';
+        }
+      };
+
+      carregarLanches();
+      carregarFrete();
+    }
+  </script>
+
+  <style>
+    body { font-family: Arial; background: #f5f5f5; padding: 20px }
+    table { width: 100%; background: #fff; border-collapse: collapse }
+    th, td { padding: 10px; border-bottom: 1px solid #ddd }
+    #modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      align-items: center;
+      justify-content: center;
+    }
+    .box {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      width: 320px;
+    }
+    input, select {
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 8px;
+    }
+  </style>
+</head>
+
+<body>
+<h1>Admin • Cardápio</h1>
+
+<div style="display:flex; gap:10px; align-items:center; margin-bottom:15px">
+  <button id="novo">➕ Novo Item</button>
+
+  <label>
+    Frete:
+    <input id="frete" placeholder="R$ 0,00" oninput="maskMoney(this)" style="width:120px">
+  </label>
+
+  <button id="atualizarFrete">💾 Atualizar Frete</button>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Nome</th>
+      <th>Tipo</th>
+      <th>Valor</th>
+      <th>Combo</th>
+      <th>Ações</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<div id="modal">
+  <div class="box">
+    <h3>Item</h3>
+    <div id="msg"></div>
+    <form id="form">
+      <input name="nome" placeholder="Nome" required />
+      <input name="descricao" placeholder="Descrição" />
+      <input name="descricao_combo" placeholder="Descrição Combo" />
+
+      <select name="tipo">
+        <option value="0">Lanche</option>
+        <option value="1">Bebida</option>
+        <option value="3">Outro</option>
+      </select>
+
+      <input name="valor" placeholder="R$ 0,00" oninput="maskMoney(this)" required />
+      <input name="valor_combo" placeholder="R$ 0,00" oninput="maskMoney(this)" />
+
+      <button type="submit">Salvar</button>
+      <button type="button" onclick="modal.style.display='none'">Cancelar</button>
+    </form>
+  </div>
+</div>
+</body>
+</html>
