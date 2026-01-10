@@ -170,7 +170,7 @@
         document.querySelector('input[name=pagamento]:checked').value;
       const troco = document.getElementById('troco').value;
 
-	  const linha = '\n-----------------------'
+	  const linha = '\n-----------------------\n';
       let msg = 'Pedido:%0A';
       Object.values(carrinho).forEach(i=>{
         msg += `${i.qtd}x ${i.nome}${i.combo?' (Combo)':''}%0A` ;
@@ -387,3 +387,4 @@
 
 </body>
 </html>
+
