@@ -867,7 +867,7 @@
     <header class="header">
       <div class="header-content">
         <div class="logo-section">
-          <img class="logo-icon" img src="/imagens/1000519235.jpg" >
+          <img class="logo-icon" src="imagens/1000519235.jpg">
           <div class="logo-text">
             <h1>NR Lanchonete</h1>
             <p>Seu lanche favorito 🍔</p>
@@ -1153,16 +1153,17 @@
             </div>
 
             ${item.valor_combo ? `
-              ${item.descricao_combo ? `<div class="combo-description">${item.descricao_combo}</div>` : ''}
+              
               <div class="price-row combo-separator">
-                <span class="price combo">${formatPrice(item.valor_combo)}</span>
                 <button class="add-btn combo" onclick='addItem(${JSON.stringify(item).replace(/'/g, "\\'")}, true)'>
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M5 12h14"/><path d="M12 5v14"/>
                   </svg>
-                  Combo
+                  Adicionar Combo
                 </button>
               </div>
+			  ${item.descricao_combo ? `<div class="combo-description">* Combo (opcional): + ${formatPrice((item.valor_combo - item.valor))} </div>` : ''}
+			  ${item.descricao_combo ? `<div class="combo-description">* ${item.descricao_combo}</div>` : ''}
             ` : ''}
           </div>
         </div>
@@ -1338,5 +1339,3 @@
   </script>
 </body>
 </html>
-
-
