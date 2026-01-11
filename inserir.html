@@ -4,6 +4,461 @@
   <meta charset="UTF-8" />
   <title>Admin • Cardápio</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #0b0205 0%, #1a0a10 50%, #0b0205 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      padding: 24px 28px;
+      background: linear-gradient(135deg, #4b1626 0%, #7a2a40 100%);
+      border-radius: 20px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 32px rgba(122, 42, 64, 0.4);
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .header h1 span {
+      font-size: 32px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #ff6b8a 0%, #ff9800 100%);
+      color: #1a0a10;
+      box-shadow: 0 4px 16px rgba(255, 107, 138, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(255, 107, 138, 0.5);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-success:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(16, 185, 129, 0.4);
+    }
+
+    /* Cards */
+    .card {
+      background: linear-gradient(145deg, rgba(43, 15, 24, 0.9) 0%, rgba(75, 22, 38, 0.6) 100%);
+      border: 1px solid rgba(255, 107, 138, 0.2);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 24px;
+      backdrop-filter: blur(10px);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .card-header h2 {
+      font-size: 18px;
+      font-weight: 600;
+      color: #ffb6c1;
+    }
+
+    .card-header .icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #ff6b8a 0%, #ff9800 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    /* Frete Section */
+    .frete-form {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .input-group label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #ffb6c1;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    input, select, textarea {
+      padding: 14px 18px;
+      border: 2px solid rgba(255, 107, 138, 0.2);
+      border-radius: 12px;
+      background: rgba(11, 2, 5, 0.8);
+      color: #fff;
+      font-size: 15px;
+      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #ff6b8a;
+      box-shadow: 0 0 0 4px rgba(255, 107, 138, 0.15);
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: rgba(255, 255, 255, 0.4);
+    }
+
+    /* Table */
+    .table-container {
+      overflow-x: auto;
+      border-radius: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background: linear-gradient(135deg, #4b1626 0%, #7a2a40 100%);
+    }
+
+    th {
+      padding: 16px 20px;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #ffb6c1;
+    }
+
+    th:first-child {
+      border-radius: 12px 0 0 12px;
+    }
+
+    th:last-child {
+      border-radius: 0 12px 12px 0;
+    }
+
+    td {
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 14px;
+    }
+
+    tbody tr {
+      transition: all 0.3s ease;
+    }
+
+    tbody tr:hover {
+      background: rgba(255, 107, 138, 0.08);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge-lanche {
+      background: rgba(251, 146, 60, 0.2);
+      color: #fb923c;
+    }
+
+    .badge-bebida {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+    }
+
+    .badge-outro {
+      background: rgba(168, 85, 247, 0.2);
+      color: #c084fc;
+    }
+
+    .price {
+      font-weight: 600;
+      color: #4ade80;
+    }
+
+    .price-combo {
+      font-weight: 600;
+      color: #ff9800;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-icon {
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(11, 2, 5, 0.9);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-content {
+      background: linear-gradient(145deg, #2b0f18 0%, #1a0a10 100%);
+      border: 1px solid rgba(255, 107, 138, 0.3);
+      border-radius: 24px;
+      padding: 32px;
+      width: 100%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+      animation: modalSlide 0.3s ease;
+    }
+
+    @keyframes modalSlide {
+      from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .modal-header .icon {
+      font-size: 28px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 20px;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 480px) {
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-group label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #ffb6c1;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    select {
+      cursor: pointer;
+    }
+
+    .modal-footer {
+      display: flex;
+      gap: 12px;
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-footer .btn {
+      flex: 1;
+    }
+
+    .msg {
+      text-align: center;
+      padding: 12px;
+      border-radius: 12px;
+      font-weight: 500;
+      margin-top: 16px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .msg:empty {
+      display: none;
+    }
+
+    .msg.success {
+      background: rgba(16, 185, 129, 0.2);
+      color: #4ade80;
+    }
+
+    .msg.error {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+    }
+
+    .msg.loading {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .empty-state .icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    /* Loading */
+    .loading-row td {
+      text-align: center;
+      padding: 40px;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header {
+        padding: 20px;
+      }
+
+      .header h1 {
+        font-size: 22px;
+      }
+
+      .card {
+        padding: 16px;
+      }
+
+      th, td {
+        padding: 12px 14px;
+      }
+    }
+  </style>
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
@@ -31,14 +486,14 @@
     const configRef = collection(db, 'configuracao');
 
     // 🔐 Login
-    const email = prompt('Email do admin:', 'admin@nr-lanches.com');
-    const senha = prompt('Senha:', 'fortinite');
+    const email = prompt('Email do admin:', 'nrlanches@gmail.com');
+    const senha = prompt('Senha:', 'senha');
 
     try {
       await signInWithEmailAndPassword(auth, email, senha);
     } catch {
       alert('Acesso negado');
-      document.body.innerHTML = '';
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-size:24px;color:#f87171;">🔒 Acesso Negado</div>';
       throw new Error('Login inválido');
     }
 
@@ -60,6 +515,15 @@
       ) || 0;
     }
 
+    function getTipoBadge(tipo) {
+      const tipos = {
+        0: { label: '🍔 Lanche', class: 'badge-lanche' },
+        1: { label: '🥤 Bebida', class: 'badge-bebida' },
+        2: { label: '🍰 Outro', class: 'badge-outro' }
+      };
+      return tipos[tipo] || tipos[2];
+    }
+
     // ================= INIT =================
     async function init() {
       const tbody = document.getElementById('tbody');
@@ -71,24 +535,48 @@
       const btnFrete = document.getElementById('atualizarFrete');
 
       let editId = null;
-      let configId = null; // 🔑 ID do único registro
+      let configId = null;
 
       // ======= LANCHES =======
       async function carregarLanches() {
-        tbody.innerHTML = '';
+        tbody.innerHTML = `
+          <tr class="loading-row">
+            <td colspan="5">⏳ Carregando itens...</td>
+          </tr>
+        `;
+        
         const snap = await getDocs(lanchesRef);
+        
+        if (snap.empty) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5">
+                <div class="empty-state">
+                  <div class="icon">📦</div>
+                  <p>Nenhum item cadastrado ainda.</p>
+                </div>
+              </td>
+            </tr>
+          `;
+          return;
+        }
 
+        tbody.innerHTML = '';
         snap.forEach(d => {
           const i = d.data();
+          const badge = getTipoBadge(i.tipo);
+          
           tbody.innerHTML += `
             <tr>
-              <td>${i.nome}</td>
-              <td>${i.tipo}</td>
-              <td>R$ ${i.valor.toFixed(2)}</td>
-              <td>${i.valor_combo ? 'R$ ' + i.valor_combo.toFixed(2) : '-'}</td>
+              <td><strong>${i.nome}</strong></td>
+              <td><span class="badge ${badge.class}">${badge.label}</span></td>
+              <td><span class="price">R$ ${i.valor.toFixed(2)}</span></td>
+              <td>${i.valor_combo ? `<span class="price-combo">R$ ${i.valor_combo.toFixed(2)}</span>` : '<span style="color: rgba(255,255,255,0.3)">—</span>'}</td>
               <td>
-                <button onclick="editar('${d.id}', ${JSON.stringify(i).replace(/"/g,'&quot;')})">✏️</button>
-                <button onclick="excluir('${d.id}')">🗑️</button>
+                <div class="actions">
+                  <button class="btn btn-secondary btn-icon" onclick='editar("${d.id}", ${JSON.stringify(i)})' title="Editar">✏️</button>
+                  <button class="btn btn-danger btn-icon" onclick='excluir("${d.id}")' title="Excluir">🗑️</button>
+                </div>
               </td>
             </tr>
           `;
@@ -107,13 +595,15 @@
 
         snap.forEach(d => {
           configId = d.id;
-          freteInput.value =
-            'R$ ' + d.data().frete.toFixed(2).replace('.', ',');
+          freteInput.value = 'R$ ' + d.data().frete.toFixed(2).replace('.', ',');
         });
       }
 
       btnFrete.onclick = async () => {
         try {
+          btnFrete.disabled = true;
+          btnFrete.innerHTML = '⏳ Salvando...';
+          
           const frete = moneyToNumber(freteInput.value);
 
           if (configId) {
@@ -123,16 +613,27 @@
             configId = docRef.id;
           }
 
-          alert('✅ Frete atualizado');
+          btnFrete.innerHTML = '✅ Salvo!';
+          setTimeout(() => {
+            btnFrete.innerHTML = '💾 Atualizar Frete';
+            btnFrete.disabled = false;
+          }, 2000);
         } catch {
-          alert('❌ Erro ao salvar frete');
+          btnFrete.innerHTML = '❌ Erro';
+          setTimeout(() => {
+            btnFrete.innerHTML = '💾 Atualizar Frete';
+            btnFrete.disabled = false;
+          }, 2000);
         }
       };
 
       // ===== CRUD LANCHE =====
       window.editar = (id, item) => {
         editId = id;
+        document.getElementById('modal-title').textContent = 'Editar Item';
         modal.style.display = 'flex';
+        msg.textContent = '';
+        msg.className = 'msg';
 
         Object.keys(item).forEach(k => {
           if (!form[k]) return;
@@ -145,7 +646,7 @@
       };
 
       window.excluir = async id => {
-        if (confirm('Excluir item?')) {
+        if (confirm('Tem certeza que deseja excluir este item?')) {
           await deleteDoc(doc(db, 'lanches', id));
           carregarLanches();
         }
@@ -153,21 +654,33 @@
 
       document.getElementById('novo').onclick = () => {
         editId = null;
+        document.getElementById('modal-title').textContent = 'Novo Item';
         form.reset();
         modal.style.display = 'flex';
+        msg.textContent = '';
+        msg.className = 'msg';
+      };
+
+      document.getElementById('cancelar').onclick = () => {
+        modal.style.display = 'none';
+      };
+
+      modal.onclick = (e) => {
+        if (e.target === modal) {
+          modal.style.display = 'none';
+        }
       };
 
       form.onsubmit = async e => {
         e.preventDefault();
-        msg.textContent = 'Salvando...';
+        msg.textContent = '⏳ Salvando...';
+        msg.className = 'msg loading';
 
         try {
           const data = Object.fromEntries(new FormData(form));
           data.tipo = Number(data.tipo);
           data.valor = moneyToNumber(data.valor);
-          data.valor_combo = data.valor_combo
-            ? moneyToNumber(data.valor_combo)
-            : null;
+          data.valor_combo = data.valor_combo ? moneyToNumber(data.valor_combo) : null;
 
           if (editId) {
             await updateDoc(doc(db, 'lanches', editId), data);
@@ -175,7 +688,9 @@
             await addDoc(lanchesRef, data);
           }
 
-          msg.textContent = '✅ Sucesso';
+          msg.textContent = '✅ Salvo com sucesso!';
+          msg.className = 'msg success';
+          
           setTimeout(() => {
             modal.style.display = 'none';
             msg.textContent = '';
@@ -183,6 +698,7 @@
           }, 1200);
         } catch {
           msg.textContent = '❌ Erro ao salvar';
+          msg.className = 'msg error';
         }
       };
 
@@ -190,82 +706,111 @@
       carregarFrete();
     }
   </script>
-
-  <style>
-    body { font-family: Arial; background: #f5f5f5; padding: 20px }
-    table { width: 100%; background: #fff; border-collapse: collapse }
-    th, td { padding: 10px; border-bottom: 1px solid #ddd }
-    #modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,.6);
-      align-items: center;
-      justify-content: center;
-    }
-    .box {
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      width: 320px;
-    }
-    input, select {
-      width: 100%;
-      margin-bottom: 8px;
-      padding: 8px;
-    }
-  </style>
 </head>
 
 <body>
-<h1>Admin • Cardápio</h1>
+  <!-- Header -->
+  <header class="header">
+    <h1><span>🍔</span> Admin • Cardápio</h1>
+    <button id="novo" class="btn btn-primary">
+      <span>➕</span> Novo Item
+    </button>
+  </header>
 
-<div style="display:flex; gap:10px; align-items:center; margin-bottom:15px">
-  <button id="novo">➕ Novo Item</button>
-
-  <label>
-    Frete:
-    <input id="frete" placeholder="R$ 0,00" oninput="maskMoney(this)" style="width:120px">
-  </label>
-
-  <button id="atualizarFrete">💾 Atualizar Frete</button>
-</div>
-
-<table>
-  <thead>
-    <tr>
-      <th>Nome</th>
-      <th>Tipo</th>
-      <th>Valor</th>
-      <th>Combo</th>
-      <th>Ações</th>
-    </tr>
-  </thead>
-  <tbody id="tbody"></tbody>
-</table>
-
-<div id="modal">
-  <div class="box">
-    <h3>Item</h3>
-    <div id="msg"></div>
-    <form id="form">
-      <input name="nome" placeholder="Nome" required />
-      <input name="descricao" placeholder="Descrição" />
-      <input name="descricao_combo" placeholder="Descrição Combo" />
-
-      <select name="tipo">
-        <option value="0">Lanche</option>
-        <option value="1">Bebida</option>
-        <option value="3">Outro</option>
-      </select>
-
-      <input name="valor" placeholder="R$ 0,00" oninput="maskMoney(this)" required />
-      <input name="valor_combo" placeholder="R$ 0,00" oninput="maskMoney(this)" />
-
-      <button type="submit">Salvar</button>
-      <button type="button" onclick="modal.style.display='none'">Cancelar</button>
-    </form>
+  <!-- Configuração de Frete -->
+  <div class="card">
+    <div class="card-header">
+      <div class="icon">🚚</div>
+      <h2>Configuração de Entrega</h2>
+    </div>
+    <div class="frete-form">
+      <div class="input-group">
+        <label>Taxa de Frete</label>
+        <input type="text" id="frete" oninput="maskMoney(this)" placeholder="R$ 0,00" style="width: 160px;">
+      </div>
+      <button id="atualizarFrete" class="btn btn-success" style="margin-top: 28px;">
+        💾 Atualizar Frete
+      </button>
+    </div>
   </div>
-</div>
+
+  <!-- Tabela de Itens -->
+  <div class="card">
+    <div class="card-header">
+      <div class="icon">📋</div>
+      <h2>Itens do Cardápio</h2>
+    </div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Tipo</th>
+            <th>Valor</th>
+            <th>Combo</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div id="modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <span class="icon">🍔</span>
+        <h2 id="modal-title">Novo Item</h2>
+      </div>
+
+      <form id="form">
+        <div class="form-grid">
+          <div class="form-group full-width">
+            <label>Nome do Item *</label>
+            <input name="nome" required placeholder="Ex: X-Bacon Especial">
+          </div>
+
+          <div class="form-group full-width">
+            <label>Descrição</label>
+            <textarea name="descricao" placeholder="Ex: Pão, hambúrguer, bacon, queijo..."></textarea>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label>Valor *</label>
+              <input name="valor" required oninput="maskMoney(this)" placeholder="R$ 0,00">
+            </div>
+
+            <div class="form-group">
+              <label>Tipo *</label>
+              <select name="tipo" required>
+                <option value="0">🍔 Lanche</option>
+                <option value="1">🥤 Bebida</option>
+                <option value="2">🍰 Outro</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group full-width">
+            <label>Descrição do Combo</label>
+            <textarea name="descricao_combo" placeholder="Ex: Acompanha batata frita + refrigerante"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Valor do Combo</label>
+            <input name="valor_combo" oninput="maskMoney(this)" placeholder="R$ 0,00">
+          </div>
+        </div>
+
+        <div id="msg" class="msg"></div>
+
+        <div class="modal-footer">
+          <button type="button" id="cancelar" class="btn btn-secondary">Cancelar</button>
+          <button type="submit" class="btn btn-primary">💾 Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </body>
 </html>
